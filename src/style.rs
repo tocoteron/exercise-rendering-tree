@@ -19,6 +19,9 @@ pub struct StyledNode<'a> {
 fn to_styled_node<'a>(node: &'a Box<Node>, stylesheet: &Stylesheet) -> Option<StyledNode<'a>> {
     let mut properties: HashMap<String, CSSValue> = [].iter().cloned().collect();
 
+    // Set the default 'display' propety
+    properties.insert("display".to_string(), CSSValue::Keyword("inline".into()));
+
     for matched_rule in stylesheet.rules.iter().filter(|r| r.matches(node)) {
         for declaration in &matched_rule.declarations {
             properties.insert(declaration.name.clone(), declaration.value.clone());
@@ -206,11 +209,17 @@ mod tests {
         ];
 
         for (stylesheet, properties) in testcases {
+            let mut properties: HashMap<String, CSSValue> = properties.iter().cloned().collect();
+
+            if properties.get("display") == None {
+                properties.insert("display".into(), CSSValue::Keyword("inline".into()));
+            }
+
             assert_eq!(
                 to_styled_node(e, &stylesheet),
                 Some(StyledNode {
                     node_type: &e.node_type,
-                    properties: properties.iter().cloned().collect(),
+                    properties,
                     children: vec![],
                 })
             );
@@ -296,7 +305,13 @@ mod tests {
                 to_styled_node(parent, &stylesheet),
                 Some(StyledNode {
                     node_type: &parent.node_type,
-                    properties: [].iter().cloned().collect(),
+                    properties: [(
+                        "display".into(),
+                        CSSValue::Keyword("inline".into()),
+                    )]
+                    .iter()
+                    .cloned()
+                    .collect(),
                     children: vec![StyledNode {
                         node_type: &child_node_type,
                         properties: [(
@@ -374,7 +389,13 @@ mod tests {
             to_styled_node(parent, &stylesheet),
             Some(StyledNode {
                 node_type: &parent.node_type,
-                properties: [].iter().cloned().collect(),
+                properties: [(
+                    "display".into(),
+                    CSSValue::Keyword("inline".into()),
+                )]
+                .iter()
+                .cloned()
+                .collect(),
                 children: vec![],
             })
         );
